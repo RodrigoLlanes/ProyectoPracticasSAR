@@ -604,6 +604,8 @@ class SAR_Project:
         """
         
         term = term + '$'
+        asterix = False
+        token_list = []
         token_find_list = []
 
         # Si contiene '?' rotamos hasta dejar el comodín al final de la palabra
@@ -612,12 +614,7 @@ class SAR_Project:
             while term[-1] != '?':
                 term = term[1:] + term[0]
             term = term[:-1]
-            token_list = self.ptindex.get(term)
-            
-            # Extraemos los tokens con la longitud de la consulta
-            for i in range(len(token_list)):
-                if len(token_list[i]) == len(term):
-                    token_find_list.append(token_list[i])
+            asterix = False
 
         # Si contiene '?' rotamos hasta dejar el comodín al final de la palabra
         # Obtenemos la lista de palabras del diccionario de igual longitud, de las que obtendremos la unión de sus posting list
@@ -625,16 +622,17 @@ class SAR_Project:
             while term[-1] != '*':
                 term = term[1:] + term[0]
             term = term[:-1]
-            token_list = []
-            # Extraemos los tokens con la longitud mayor o igual a la consulta y que coincidan con su permuterm
-            # Añadimos los tokens a la lista
-            for clave in self.ptindex.keys():
-                if clave[0:len(term)] == term:
-                    for tk in self.ptindex.get(clave):
-                        if tk not in token_find_list:
-                            token_find_list.append(tk)
+            asterix = True
 
-        if len(token_list) == 1:
+        # Extraemos los tokens con la longitud mayor o igual (si no '*') a la consulta y que coincidan con su permuterm
+        # Añadimos los tokens a la lista
+        for clave in ptindex.keys():
+            if clave[0:len(term)] == term:
+                for tk in ptindex.get(clave):
+                    if (tk not in token_find_list) and (asterix or (len(tk) == len(term))):
+                        token_find_list.append(tk)
+
+        if len(token_find_list) == 1:
             return self.solve_query(token_find_list[0])
         
         # Calculamos la consulta como union de tokens
