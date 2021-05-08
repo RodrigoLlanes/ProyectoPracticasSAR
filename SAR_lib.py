@@ -854,10 +854,14 @@ class SAR_Project:
         print('========================================')
         print('Query: '+str(query)+'\n')
         print('Number of results: '+str(len(result))+'\n')
-        i=0
-        
-        for noticia in result:
+        i=0 
+        if self.show_all:
+            nIteraciones = range(len(result))
+        else:
+            nIteraciones = range(min(len(result), self.SHOW_MAX))
+        for j in nIteraciones:
             i=1+i
+            noticia = result[j]
             fileId   = self.news[noticia]
             with open(self.docs[fileId[0]]) as f:
                 jsonNoticia = json.load(f)            
