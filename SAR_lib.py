@@ -542,7 +542,7 @@ class SAR_Project:
         ####        ####
         
         
-        return self.index[field].get(term, [])
+        return self.get(term, [])
 
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
