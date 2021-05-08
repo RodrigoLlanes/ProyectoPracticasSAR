@@ -514,12 +514,7 @@ class SAR_Project:
         if self.use_stemming:
             return self.get_stemming(term)
         ####          ####
-        
-        #### PERMUTERM ####
-        if self.use_permuterm:
-            return self.get_permuterm(term)
-        ####           ####
-        
+             
         return self.index.get(term, [])
 
         ########################################
