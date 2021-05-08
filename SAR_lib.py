@@ -172,15 +172,37 @@ class SAR_Project:
         self.docs[doc_id] = filename
 
         with open(filename) as fh:
-            jlist = json.load(fh)
-            for i, article in enumerate([new["article"] for new in jlist]):
-                self.news[new_id] = (doc_id, i)
-                for token in set(self.tokenize(article)):  # set() para eliminar repetidas
-                    if token not in self.index:
-                        self.index[token] = [new_id]
-                    else:
-                        self.index[token].append(new_id)
-                new_id += 1
+            jlist = json.load(fh)            
+            if not self.multifield:
+                for i, article in enumerate([new["article"] for new in jlist]):
+                    self.news[new_id] = (doc_id, i)
+                    for token in set(self.tokenize(article)):  # set() para eliminar repetidas
+                        if token not in self.index:
+                            self.index[token] = [new_id]
+                        else:
+                            self.index[token].append(new_id)
+                    new_id += 1
+            else:                
+                i = 0
+                for new in jlist:
+                    i += 1
+                    self.news[new_id] = (doc_id, i)
+                    for field, tokenizar in self.fields: 
+                        if tokenizar:   
+                            for token in set(self.tokenize(new[field])):
+                                if token not in self.index.get(field,{}).keys():
+                                    self.index[field][token] = [new_id]
+                                else:
+                                    self.index[field][token].append(new_id)
+                        else:
+                            token = new[field]
+                            if token not in self.index.get(field,{}).keys():
+                                self.index[field][token] = [new_id]
+                            else:
+                                self.index[field][token].append(new_id)
+
+
+                    new_id += 1
         
         
         #
@@ -281,16 +303,16 @@ class SAR_Project:
         """
         print("=" * 40)
         if self.multifield:
-            print("Number of indexed days: " + str(len(self.dates)))
+            print("Number of indexed days: " + str(len(self.index['date'])))
             print("-" * 40)
             print("Number of indexed news: " + str(len(self.news)))
             print("-" * 40)
             print("TOKENS:")
-            print("\t# tokens in 'title': " + str(len(self.title)))
-            print("\t# tokens in 'date': " + str(len(self.dates)))
-            print("\t# tokens in 'keywords': " + str(len(self.keywords)))
-            print("\t# tokens in 'article': " + str(len(self.article)))
-            print("\t# tokens in 'summary': " + str(len(self.summary)))
+            print("\t# tokens in 'title': " + str(len(self.index['title'])))
+            print("\t# tokens in 'date': " + str(len(self.index['date'])))
+            print("\t# tokens in 'keywords': " + str(len(self.index['keywords'])))
+            print("\t# tokens in 'article': " + str(len(self.index['article'])))
+            print("\t# tokens in 'summary': " + str(len(self.index['summary'])))
             print("-" * 40)
         else:
             #print("Number of indexed days: " + str(len(self.dates)))
