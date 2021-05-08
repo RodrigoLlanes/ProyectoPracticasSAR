@@ -130,6 +130,13 @@ class SAR_Project:
         self.positional = args['positional']
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
+        
+        if self.multifield:
+            self.index['title']={}
+            self.index['date']={}
+            self.index['keywords']={}
+            self.index['article']={}
+            self.index['summary']={}
 
         for dir, subdirs, files in os.walk(root):
             for filename in files:
