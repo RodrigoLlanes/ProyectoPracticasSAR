@@ -256,10 +256,6 @@ class SAR_Project:
         for token in self.index.keys():
             pterm = token + '$'
             for i in range(len(pterm)):
-                #for j in range(0, len(pterm) - 1):
-                #print(i, j)
-                #print(len(self.ptindex))
-                    #item = pterm[j:]
                 if '$' in pterm:
                     # Si ya existe en el índice permuterm, añadimos el token (si es nuevo) a su lista
                     if pterm in self.ptindex.keys():
