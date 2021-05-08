@@ -604,6 +604,7 @@ class SAR_Project:
         """
         
         term = term + '$'
+        token_find_list = []
 
         # Si contiene '?' rotamos hasta dejar el comodín al final de la palabra
         # Obtenemos la lista de palabras del diccionario de igual longitud, de las que obtendremos la unión de sus posting list
@@ -615,11 +616,8 @@ class SAR_Project:
             
             # Extraemos los tokens con la longitud de la consulta
             for i in range(len(token_list)):
-                if len(token_list[i]) != len(term):
-                    del token_list[i]
-
-            if len(token_list) == 1:
-                return self.solve_query(token_list[0])
+                if len(token_list[i]) == len(term):
+                    token_find_list.append(token_list[i])
 
         # Si contiene '?' rotamos hasta dejar el comodín al final de la palabra
         # Obtenemos la lista de palabras del diccionario de igual longitud, de las que obtendremos la unión de sus posting list
@@ -633,17 +631,17 @@ class SAR_Project:
             for clave in self.ptindex.keys():
                 if clave[0:len(term)] == term:
                     for tk in self.ptindex.get(clave):
-                        if tk not in token_list:
-                            token_list.append(tk)
+                        if tk not in token_find_list:
+                            token_find_list.append(tk)
 
         if len(token_list) == 1:
-            return self.solve_query(token_list[0])
+            return self.solve_query(token_find_list[0])
         
         # Calculamos la consulta como union de tokens
         query = ''
-        for i in range(len(token_list) - 1):
-            query = query + token_list[i] + 'OR'
-        query = query + token_list[len(token_list)]
+        for i in range(len(token_find_list) - 1):
+            query = query + token_find_list[i] + 'OR'
+        query = query + token_find_list[len(token_find_list)]
 
         return self.solve_query(query)
 
