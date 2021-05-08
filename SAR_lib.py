@@ -517,8 +517,12 @@ class SAR_Project:
         #### STEMMING ####
         if self.use_stemming:
             return self.get_stemming(term)
-        ####        ####
+        ####          ####
         
+        #### PERMUTERM ####
+        if self.use_permuterm:
+            return self.get_permuterm(term)
+        ####           ####
         
         return self.index.get(term, [])
 
@@ -609,15 +613,13 @@ class SAR_Project:
         token_find_list = []
 
         # Si contiene '?' rotamos hasta dejar el comodín al final de la palabra
-        # Obtenemos la lista de palabras del diccionario de igual longitud, de las que obtendremos la unión de sus posting list
         if '?' in term:
             while term[-1] != '?':
                 term = term[1:] + term[0]
             term = term[:-1]
             asterix = False
 
-        # Si contiene '?' rotamos hasta dejar el comodín al final de la palabra
-        # Obtenemos la lista de palabras del diccionario de igual longitud, de las que obtendremos la unión de sus posting list
+        # Si contiene '*' rotamos hasta dejar el comodín al final de la palabra
         if '*' in term:
             while term[-1] != '*':
                 term = term[1:] + term[0]
@@ -638,8 +640,8 @@ class SAR_Project:
         # Calculamos la consulta como union de tokens
         query = ''
         for i in range(len(token_find_list) - 1):
-            query = query + token_find_list[i] + 'OR'
-        query = query + token_find_list[len(token_find_list)]
+            query = query + token_find_list[i] + ' OR '
+        query = query + token_find_list[len(token_find_list) - 1]
 
         return self.solve_query(query)
 
