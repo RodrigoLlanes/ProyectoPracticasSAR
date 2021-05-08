@@ -174,12 +174,30 @@ class SAR_Project:
         with open(filename) as fh:
             jlist = json.load(fh)
             for i, article in enumerate([new["article"] for new in jlist]):
-                self.news[new_id] = (doc_id, i)
+                self.news['article'][new_id] = (doc_id, i)
                 for token in set(self.tokenize(article)):  # set() para eliminar repetidas
                     if token not in self.index:
-                        self.index[token] = [new_id]
+                        self.index['article'][token] = [new_id]
                     else:
-                        self.index[token].append(new_id)
+                        self.index['article'][token].append(new_id)
+                if fields[0][1]:
+                    for token in set(self.tokenize(new['title'])):
+                        if token not in self.index:
+                            self.index['title'][token] = [new_id]
+                        else:
+                            self.index['title'][token].append(new_id)
+                if fields[2][1]
+                    for token in set(self.tokenize(new['keywords'])):
+                        if token not in self.index:
+                            self.index['keywords'][token] = [new_id]
+                        else:
+                            self.index['keywords'][token].append(new_id)
+                if fields[4][1]:
+                    for token in set(self.tokenize(new['summary'])):
+                        if token not in self.index:
+                            self.index['summary'][token] = [new_id]
+                        else:
+                            self.index['summary'][token].append(new_id)                            
                 new_id += 1
         
         
