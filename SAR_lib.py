@@ -674,9 +674,9 @@ class SAR_Project:
                     if clave[0:len(term)] == term:
                         for tk in ptindex[field].get(clave):
                             if (tk not in token_find_list):
-                                if asterix and (len(tk) >= len(term))):
+                                if asterix and (len(tk) >= len(term)):
                                     token_find_list.append(tk)
-                                elif (len(tk) == len(term))):
+                                elif (len(tk) == len(term)):
                                     token_find_list.append(tk)
 
         else:
@@ -687,9 +687,9 @@ class SAR_Project:
                 if clave[0:len(term)] == term:
                     for tk in ptindex.get(clave):
                         if (tk not in token_find_list):
-                            if asterix and (len(tk) >= len(term))):
+                            if asterix and (len(tk) >= len(term)):
                                 token_find_list.append(tk)
-                            elif (len(tk) == len(term))):
+                            elif (len(tk) == len(term)):
                                 token_find_list.append(tk)
 
         if len(token_find_list) == 1:
@@ -697,7 +697,7 @@ class SAR_Project:
         
         # Calculamos la consulta como union de tokens
         pList = self.get_posting(token_find_list[0])
-        for i in range(1:len(token_find_list)):
+        for i in range(1, len(token_find_list)):
             pList = self.or_posting(pList, self.get_posting(token_find_list[i]))
 
         return pList
