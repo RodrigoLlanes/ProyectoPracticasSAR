@@ -425,12 +425,7 @@ class SAR_Project:
             return self.solve_query_parenthesis(query)
 
         if len(query) == 1:
-            if '?' in query:
-                return self.get_permuterm(query)
-            elif '*' in query:
-                return self.get_permuterm(query)
-            else:
-                return self.get_posting(query)
+            return self.get_posting(query)
 
         reg = re.compile(r"\w+")
         tokens = reg.findall(query)
@@ -440,12 +435,7 @@ class SAR_Project:
         if firstToken == 'NOT':
             connector = firstToken
             firstToken = tokens.pop(0)
-            if '?' in firstToken:
-                pList = self.get_permuterm(firstToken)
-            elif '*' in firstToken:
-                pList = self.get_permuterm(firstToken)
-            else:
-                pList = self.get_posting(firstToken)
+            pList = self.get_posting(firstToken)
             pList = self.reverse_posting(pList)
         # Si el primer elemento es un token
         else:
@@ -458,12 +448,7 @@ class SAR_Project:
             # Si el siguiente elemento no es un token, sino un conector 'NOT'
             if nextToken == 'NOT':
                 nextToken = tokens.pop(0)
-                if '?' in nextToken:
-                    nextPosting = self.get_permuterm(nextToken)
-                elif '*' in nextToken:
-                    nextPosting = self.get_permuterm(nextToken)
-                else:
-                    nextPosting = self.get_posting(nextToken)
+                nextPosting = self.get_posting(nextToken)
                 nextPosting = self.reverse_posting(nextPosting)
             # Si el siguiente elemento es un token
             else:
@@ -477,7 +462,7 @@ class SAR_Project:
                 
         if pList is None:
             return []
-            
+
         return pList
 
         ########################################
@@ -566,12 +551,18 @@ class SAR_Project:
 
         """
         
+        # Permuterm
+        if '?' in term:
+            return self.get_permuterm(term)
+        elif '*' in term:
+            return self.get_permuterm(term)
+
         #### STEMMING ####
         if self.use_stemming:
             return self.get_stemming(term)
         ####          ####
              
-        return self.index.get(term, [])
+        return self.index[field].get(term, [])
 
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
