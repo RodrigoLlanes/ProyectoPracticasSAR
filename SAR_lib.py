@@ -279,22 +279,47 @@ class SAR_Project:
         Crea el indice permuterm (self.ptindex) para los terminos de todos los indices.
 
         """
-        # Por cada token en el índice, añadimos el símbolo '$' como delimitador
-        # Para cada longitud y rotación posible que contenga el símbolo '$',
-        # # se crea una entrada y se añade el token a la lista
-        for token in self.index.keys():
-            pterm = token + '$'
-            for i in range(len(pterm)):
-                if '$' in pterm:
-                    # Si ya existe en el índice permuterm, añadimos el token (si es nuevo) a su lista
-                    if pterm in self.ptindex.keys():
-                        if token not in self.ptindex.get(pterm):
-                            self.ptindex[pterm].append(token)
-                    # Y si no existía, se crea una entrada, con una lista de tokens
-                    else:
-                        self.ptindex[pterm] = [token]
-                # Siguiente rotación del token
-                pterm = pterm[1:] + pterm[0]
+
+        if self.multifield:
+            for field in self.index.keys():
+                self.ptindex[field] = {}    
+
+            # Por cada token en el índice dentro de cada campo, añadimos el símbolo '$' como delimitador
+            # Para cada longitud y rotación posible que contenga el símbolo '$',
+            # # se crea una entrada en ese campo y se añade el token a la lista
+            for field in self.ptindex.keys():
+                for token in self.index[field].keys():
+                    pterm = token + '$'
+                    for i in range(len(pterm)):
+                        if '$' in pterm:
+                            # Si ya existe en el índice permuterm, añadimos el token (si es nuevo) a su lista
+                            if pterm in self.ptindex[field].keys():
+                                if token not in self.ptindex[field].get(pterm):
+                                    self.ptindex[field][pterm].append(token)
+                            # Y si no existía, se crea una entrada, con una lista de tokens
+                            else:
+                                self.ptindex[field][pterm] = [token]
+                        # Siguiente rotación del token
+                        pterm = pterm[1:] + pterm[0]
+
+        else:
+
+            # Por cada token en el índice, añadimos el símbolo '$' como delimitador
+            # Para cada longitud y rotación posible que contenga el símbolo '$',
+            # # se crea una entrada y se añade el token a la lista
+            for token in self.index.keys():
+                pterm = token + '$'
+                for i in range(len(pterm)):
+                    if '$' in pterm:
+                        # Si ya existe en el índice permuterm, añadimos el token (si es nuevo) a su lista
+                        if pterm in self.ptindex.keys():
+                            if token not in self.ptindex.get(pterm):
+                                self.ptindex[pterm].append(token)
+                        # Y si no existía, se crea una entrada, con una lista de tokens
+                        else:
+                            self.ptindex[pterm] = [token]
+                    # Siguiente rotación del token
+                    pterm = pterm[1:] + pterm[0]
 
 
         ####################################################
@@ -335,11 +360,11 @@ class SAR_Project:
 
             if self.multifield:
                 print("PERMUTERMS: ")
-                print("\t# permuterms in 'title': " + str(len(self.pttitle)))
-                print("\t# permuterms in 'date': " + str(len(self.ptdates)))
-                print("\t# permuterms in 'keywords': " + str(len(self.ptkeywords)))
-                print("\t# permuterms in 'article': " + str(len(self.ptarticle)))
-                print("\t# permuterms in 'summary': " + str(len(self.ptsummary)))
+                print("\t# permuterms in 'title': " + str(len(self.ptindex['title'])))
+                print("\t# permuterms in 'date': " + str(len(self.ptindex['date'])))
+                print("\t# permuterms in 'keywords': " + str(len(self.ptindex['keywords'])))
+                print("\t# permuterms in 'article': " + str(len(self.ptindex['article'])))
+                print("\t# permuterms in 'summary': " + str(len(self.ptindex['summary'])))
                 print("-" * 40)
             else:
                 print("PERMUTERMS: " + str(len(self.ptindex)))
@@ -410,20 +435,21 @@ class SAR_Project:
         reg = re.compile(r"\w+")
         tokens = reg.findall(query)
         firstToken = tokens.pop(0)
+
         # Si el primer elemento no es un token, sino un conector 'NOT'
         if firstToken == 'NOT':
             connector = firstToken
             firstToken = tokens.pop(0)
             if '?' in firstToken:
-                firstPosting = self.get_permuterm(firstToken)
+                pList = self.get_permuterm(firstToken)
             elif '*' in firstToken:
-                firstPosting = self.get_permuterm(firstToken)
+                pList = self.get_permuterm(firstToken)
             else:
-                firstPosting = self.get_posting(firstToken)
-            firstPosting = self.reverse_posting(firstPosting)
+                pList = self.get_posting(firstToken)
+            pList = self.reverse_posting(pList)
         # Si el primer elemento es un token
         else:
-            firstPosting = self.get_posting(firstToken)
+            pList = self.get_posting(firstToken)
 
         while len(tokens) > 1:
             connector = tokens.pop(0)
@@ -445,13 +471,14 @@ class SAR_Project:
 
             # Según el conector de la solicitud
             if connector == 'AND':
-                firstPosting = self.and_posting(firstPosting, nextPosting)
+                pList = self.and_posting(pList, nextPosting)
             if connector == 'OR':
-                firstPosting = self.or_posting(firstPosting, nextPosting)
+                pList = self.or_posting(pList, nextPosting)
                 
-        if firstPosting is None:
+        if pList is None:
             return []
-        return firstPosting
+            
+        return pList
 
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
@@ -646,24 +673,43 @@ class SAR_Project:
             term = term[:-1]
             asterix = True
 
-        # Extraemos los tokens con la longitud mayor o igual (si no '*') a la consulta y que coincidan con su permuterm
-        # Añadimos los tokens a la lista
-        for clave in ptindex.keys():
-            if clave[0:len(term)] == term:
-                for tk in ptindex.get(clave):
-                    if (tk not in token_find_list) and (asterix or (len(tk) == len(term))):
-                        token_find_list.append(tk)
+        if self.multifield:
+
+            # Extraemos los tokens con la longitud mayor o igual (si no '*') a la consulta y que coincidan con su permuterm
+            # según el campo especificado
+            # Añadimos los tokens a la lista
+            for field in self.ptindex.keys():    
+                for clave in ptindex[field].keys():
+                    if clave[0:len(term)] == term:
+                        for tk in ptindex[field].get(clave):
+                            if (tk not in token_find_list):
+                                if asterix and (len(tk) >= len(term))):
+                                    token_find_list.append(tk)
+                                elif (len(tk) == len(term))):
+                                    token_find_list.append(tk)
+
+        else:
+
+            # Extraemos los tokens con la longitud mayor o igual (si no '*') a la consulta y que coincidan con su permuterm
+            # Añadimos los tokens a la lista
+            for clave in ptindex.keys():
+                if clave[0:len(term)] == term:
+                    for tk in ptindex.get(clave):
+                        if (tk not in token_find_list):
+                            if asterix and (len(tk) >= len(term))):
+                                token_find_list.append(tk)
+                            elif (len(tk) == len(term))):
+                                token_find_list.append(tk)
 
         if len(token_find_list) == 1:
-            return self.solve_query(token_find_list[0])
+            return self.get_posting(token_find_list[0])
         
         # Calculamos la consulta como union de tokens
-        query = ''
-        for i in range(len(token_find_list) - 1):
-            query = query + token_find_list[i] + ' OR '
-        query = query + token_find_list[len(token_find_list) - 1]
+        pList = self.get_posting(token_find_list[0])
+        for i in range(1:len(token_find_list)):
+            pList = self.or_posting(pList, self.get_posting(token_find_list[i]))
 
-        return self.solve_query(query)
+        return pList
 
         ##################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
