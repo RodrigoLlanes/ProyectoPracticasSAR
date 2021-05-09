@@ -48,6 +48,7 @@ class SAR_Project:
         self.show_snippet = False  # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False  # valor por defecto, se cambia con self.set_stemming()
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
+        self.posindex = {}
 
     ###############################
     ###                         ###
@@ -131,12 +132,14 @@ class SAR_Project:
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
         
+        #### MULTIFIELD ####
         if self.multifield:
             self.index['title']={}
             self.index['date']={}
             self.index['keywords']={}
             self.index['article']={}
             self.index['summary']={}
+        ####
 
         for dir, subdirs, files in os.walk(root):
             for filename in files:
@@ -148,12 +151,12 @@ class SAR_Project:
         ## COMPLETAR PARA FUNCIONALIDADES EXTRA ##
         ##########################################
         
-        ####    STEEMING, BORJA   #####
+        ####    STEEMING   ####
         if self.stemming:    
             self.make_stemming()
         ####
         
-        ####    PERMUTERM, JAVI ####
+        ####    PERMUTERM  ####
         if self.permuterm:
             self.make_permuterm()
         ####
@@ -177,9 +180,12 @@ class SAR_Project:
         doc_id = len(self.docs.keys())
         new_id = len(self.news.keys())
         self.docs[doc_id] = filename
-
+        
+        
         with open(filename) as fh:
-            jlist = json.load(fh)            
+            jlist = json.load(fh)
+            
+            ################ MULTIFIELD ####################
             if not self.multifield:
                 for i, article in enumerate([new["article"] for new in jlist]):
                     self.news[new_id] = (doc_id, i)
@@ -189,6 +195,8 @@ class SAR_Project:
                         else:
                             self.index[token].append(new_id)
                     new_id += 1
+            ####################################
+            
             else:                
                 i = 0
                 for new in jlist:
@@ -249,24 +257,45 @@ class SAR_Project:
         self.stemmer.stem(token) devuelve el stem del token
 
         """
+        ################ MULTIFIELD ####################
         
-        ## Por cada token del índice...
-        for token in self.index:
-            
-            ## Genero su stem.
-            stemmedtoken = self.stemmer.stem(token)
-            
-            ## Si no tengo el stem en el índice de stems, lo añado creándo una lista con el token.
-            if self.sindex.get(stemmedtoken) == None:
-                self.sindex[stemmedtoken] = [token]
+        if self.multifield:
+            # Se generan los diccionarios de stemming de segundo nivel para cada field
+            for field in self.index.keys():
+                self.sindex[field] = {}    
                 
-            ## Si tengo el stem en el índice de stems, significa que el stem del token es equivalente 
-            ## al stem de otro token ya añadido, por lo tanto añado el token a la lista de tal stem.
-            else :
-                self.sindex[stemmedtoken].append(token)
+            # Recorro para cada field, sus tokens correspondientes en el dicc self.index con multifield.
+            for field in self.sindex.keys():
+                for token in self.index[field].keys():
+                    ## Genero su stem.
+                    stemmedtoken = self.stemmer.stem(token)
+                    
+                    ## Si no tengo el stem en el índice de stems, lo añado creándo una lista con el token.
+                    if self.sindex[field].get(stemmedtoken) == None:
+                        self.sindex[field][stemmedtoken] = [token]
+                        
+                    ## Si tengo el stem en el índice de stems, significa que el stem del token es equivalente 
+                    ## al stem de otro token ya añadido, por lo tanto añado el token a la lista de tal stem.
+                    else :
+                        self.sindex[field][stemmedtoken].append(token)
         
-
+        ####################################
         
+        else: 
+                ## Por cada token del índice...
+            for token in self.index:
+                
+                ## Genero su stem.
+                stemmedtoken = self.stemmer.stem(token)
+                
+                ## Si no tengo el stem en el índice de stems, lo añado creándo una lista con el token.
+                if self.sindex.get(stemmedtoken) == None:
+                    self.sindex[stemmedtoken] = [token]
+                    
+                ## Si tengo el stem en el índice de stems, significa que el stem del token es equivalente 
+                ## al stem de otro token ya añadido, por lo tanto añado el token a la lista de tal stem.
+                else :
+                    self.sindex[stemmedtoken].append(token)
 
         ####################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
@@ -279,7 +308,8 @@ class SAR_Project:
         Crea el indice permuterm (self.ptindex) para los terminos de todos los indices.
 
         """
-
+        ################ MULTIFIELD ####################
+        
         if self.multifield:
             for field in self.index.keys():
                 self.ptindex[field] = {}    
@@ -301,6 +331,8 @@ class SAR_Project:
                                 self.ptindex[field][pterm] = [token]
                         # Siguiente rotación del token
                         pterm = pterm[1:] + pterm[0]
+        
+        ####################################
 
         else:
 
@@ -347,14 +379,10 @@ class SAR_Project:
             print("\t# tokens in 'summary': " + str(len(self.index['summary'])))
             print("-" * 40)
         else:
-            #print("Number of indexed days: " + str(len(self.dates)))
-            #print("-" * 40)
             print("Number of indexed news: " + str(len(self.news)))
             print("-" * 40)
             print("TOKENS: " + str(len(self.index)))
             print("-" * 40)
-            #print("Positional queries are NOT allowed.")
-            #print("-" * 40)
 
         if self.permuterm:
 
@@ -371,15 +399,15 @@ class SAR_Project:
                 print("-" * 40)
 
         if self.stemming == True:
-            #if self.multifield == True:
-                #print("STEMS:")
-                #print("\t# stems in 'title': " + str(len(self.stitle)))
-                #print("\t# stems in 'date': " + str(len(self.sdates)))
-                #print("\t# stems in 'keywords': " + str(len(self.skeywords)))
-                #print("\t# stems in 'article': " + str(len(self.sarticle)))
-                #print("\t# stems in 'summary': " + str(len(self.ssummary)))
-                #print("-" * 40)
-            #else:
+            if self.multifield == True:
+                print("STEMS:")
+                print("\t# stems in 'title': " + str(len(self.sindex['title'])))
+                print("\t# stems in 'date': " + str(len(self.sindex['date'])))
+                print("\t# stems in 'keywords': " + str(len(self.sindex['keywords'])))
+                print("\t# stems in 'article': " + str(len(self.sindex['article'])))
+                print("\t# stems in 'summary': " + str(len(self.sindex['summary'])))
+                print("-" * 40)
+            else:
                 print("STEMS: " + str(len(self.sindex)))
                 print("-" * 40)
         
@@ -417,12 +445,14 @@ class SAR_Project:
         return: posting list con el resultado de la query
 
         """
-
+            
         if query is None or len(query) == 0:
             return []
-
+        
+        #### PATRENTHESIS ####
         if "(" in query:
             return self.solve_query_parenthesis(query)
+        ####
 
         if len(query) == 1:
             return self.get_posting(query)
@@ -553,13 +583,13 @@ class SAR_Project:
         
         # Permuterm
         if '?' in term:
-            return self.get_permuterm(term)
+            return self.get_permuterm(term, field)
         elif '*' in term:
-            return self.get_permuterm(term)
+            return self.get_permuterm(term, field)
 
         #### STEMMING ####
         if self.use_stemming:
-            return self.get_stemming(term)
+            return self.get_stemming(term, field)
         ####          ####
              
         return self.index[field].get(term, [])
@@ -599,31 +629,64 @@ class SAR_Project:
 
         """
         
-        # Generamos el stem del termino.
-        stem = self.stemmer.stem(term)
-        # Consultamos la lista de terminos pertenecientes a dicho stem.
-        tokens = self.sindex.get(stem)
-        
-        # Stem no está en el índice?
-        if tokens == None:
-            return []
-        
-        r = aux = pl = []
-        
-        # Recorremos la lista de terminos.
-        for token in tokens:
+        ################ MULTIFIELD ####################
+        if self.multifield:
             
-            # Obtenemos la posting list de cada termino con el mismo stem y las concatenamos
-            pl = self.index.get(token)
-            aux = self.or_posting(r, pl)
-            r = aux
+            # Generamos el stem del termino.
+            stem = self.stemmer.stem(term)
+            # Consultamos la lista de terminos pertenecientes a dicho stem.
+            tokens = self.sindex[field].get(stem)
             
-        # Eliminamos newid repetidos con la siguiente instrucción, al convertir a dict quitamos repetidos y
-        # lo volvemos a convertir a lista
-        #r = set(listapostings)
+            # Stem no está en el índice?
+            if tokens == None:
+                return []
             
-        # Ordenamos la lista
-        r.sort()
+            r = aux = pl = []
+            
+            # Recorremos la lista de terminos.
+            for token in tokens:
+                
+                # Obtenemos la posting list de cada termino con el mismo stem y las concatenamos
+                pl = self.index[field].get(token)
+                aux = self.or_posting(r, pl)
+                r = aux
+                
+            # Eliminamos newid repetidos con la siguiente instrucción, al convertir a dict quitamos repetidos y
+            # lo volvemos a convertir a lista
+            #r = set(listapostings)
+                
+            # Ordenamos la lista
+            r.sort()
+        #################################################
+            
+    
+        else:
+        
+            # Generamos el stem del termino.
+            stem = self.stemmer.stem(term)
+            # Consultamos la lista de terminos pertenecientes a dicho stem.
+            tokens = self.sindex.get(stem)
+            
+            # Stem no está en el índice?
+            if tokens == None:
+                return []
+            
+            r = aux = pl = []
+            
+            # Recorremos la lista de terminos.
+            for token in tokens:
+                
+                # Obtenemos la posting list de cada termino con el mismo stem y las concatenamos
+                pl = self.index.get(token)
+                aux = self.or_posting(r, pl)
+                r = aux
+                
+            # Eliminamos newid repetidos con la siguiente instrucción, al convertir a dict quitamos repetidos y
+            # lo volvemos a convertir a lista
+            #r = set(listapostings)
+                
+            # Ordenamos la lista
+            r.sort()
             
         return r
                
@@ -663,29 +726,33 @@ class SAR_Project:
                 term = term[1:] + term[0]
             term = term[:-1]
             asterix = True
-
+            
+            
+        ################ MULTIFIELD ####################
         if self.multifield:
 
             # Extraemos los tokens con la longitud mayor o igual (si no '*') a la consulta y que coincidan con su permuterm
             # según el campo especificado
             # Añadimos los tokens a la lista
             for field in self.ptindex.keys():    
-                for clave in ptindex[field].keys():
+                for clave in self.ptindex[field].keys():
                     if clave[0:len(term)] == term:
-                        for tk in ptindex[field].get(clave):
+                        for tk in self.ptindex[field].get(clave):
                             if (tk not in token_find_list):
                                 if asterix and (len(tk) >= len(term)):
                                     token_find_list.append(tk)
                                 elif (len(tk) == len(term)):
                                     token_find_list.append(tk)
+        
+        ####################################
 
         else:
 
             # Extraemos los tokens con la longitud mayor o igual (si no '*') a la consulta y que coincidan con su permuterm
             # Añadimos los tokens a la lista
-            for clave in ptindex.keys():
+            for clave in self.ptindex.keys():
                 if clave[0:len(term)] == term:
-                    for tk in ptindex.get(clave):
+                    for tk in self.ptindex.get(clave):
                         if (tk not in token_find_list):
                             if asterix and (len(tk) >= len(term)):
                                 token_find_list.append(tk)
