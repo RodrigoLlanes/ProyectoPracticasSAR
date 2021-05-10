@@ -197,7 +197,7 @@ class SAR_Project:
             ####################################
             
             else:                
-                i = 0
+                i = -1
                 for new in jlist:
                     i += 1
                     self.news[new_id] = (doc_id, i)
