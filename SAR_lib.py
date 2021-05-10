@@ -510,7 +510,6 @@ class SAR_Project:
                 
                 ### MULTIFIELD ###
                 if ":" in nextToken:
-                    #print('Hey6')
                     split = nextToken.split(':')
                     nextPosting = self.get_posting(split[1],split[0])
                 ####
@@ -795,18 +794,26 @@ class SAR_Project:
                                 token_find_list.append(tk)
 
         if len(token_find_list) == 1:
-            return self.get_posting(token_find_list[0])
+            return self.get_posting_permu(token_find_list[0])
         
         # Calculamos la consulta como union de tokens
-        pList = self.get_posting(token_find_list[0])
+        pList = self.get_posting_permu(token_find_list[0])
         for i in range(1, len(token_find_list)):
-            pList = self.or_posting(pList, self.get_posting(token_find_list[i]))
+            pList = self.or_posting(pList, self.get_posting_permu(token_find_list[i]))
 
         return pList
 
         ##################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
+        
+    def get_posting_permu(self, term, field='article'):
+        """ 
+        Método para obtener posting list de tokens provenientes al realizar permuterms,
+        esto evita que se acceda al diccionaro de stemming para buscar Tokens básicos si stemming está habilitado.
+        
+        """
+        return self.index[field].get(term, [])
 
     def reverse_posting(self, p):
         """
