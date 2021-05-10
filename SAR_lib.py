@@ -48,7 +48,6 @@ class SAR_Project:
         self.show_snippet = False  # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False  # valor por defecto, se cambia con self.set_stemming()
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
-        self.posindex = {}
 
     ###############################
     ###                         ###
@@ -456,20 +455,36 @@ class SAR_Project:
 
         if len(query) == 1:
             return self.get_posting(query)
-
-        reg = re.compile(r"\w+")
-        tokens = reg.findall(query)
+        
+        #reg = re.compile(r"\w+")
+        tokens = query.split(' ')
+        #tokens = reg.findall(query)
         firstToken = tokens.pop(0)
 
         # Si el primer elemento no es un token, sino un conector 'NOT'
         if firstToken == 'NOT':
             connector = firstToken
             firstToken = tokens.pop(0)
+            
+            ### MULTIFIELD ###
+            if ":" in firstToken:
+                split = firstToken.split(':')
+                pList = self.get_posting(split[1],split[0])
+                pList = self.reverse_posting(pList)
+            ####
+            
             pList = self.get_posting(firstToken)
             pList = self.reverse_posting(pList)
         # Si el primer elemento es un token
         else:
-            pList = self.get_posting(firstToken)
+            ### MULTIFIELD ###
+            if ":" in firstToken:
+                split = firstToken.split(':')
+                pList = self.get_posting(split[1],split[0])  
+            ####
+            
+            else:
+                pList = self.get_posting(firstToken)
 
         while len(tokens) > 1:
             connector = tokens.pop(0)
@@ -478,18 +493,37 @@ class SAR_Project:
             # Si el siguiente elemento no es un token, sino un conector 'NOT'
             if nextToken == 'NOT':
                 nextToken = tokens.pop(0)
-                nextPosting = self.get_posting(nextToken)
-                nextPosting = self.reverse_posting(nextPosting)
+                
+                ### MULTIFIELD ###
+                if ":" in nextToken:
+                    split = nextToken.split(':')
+                    nextPosting = self.get_posting(split[1],split[0])
+                    nextPosting = self.reverse_posting(nextPosting)
+                ####
+                
+                else:
+                    nextPosting = self.get_posting(nextToken)
+                    nextPosting = self.reverse_posting(nextPosting)
+                
             # Si el siguiente elemento es un token
             else:
-                nextPosting = self.get_posting(nextToken)
+                
+                ### MULTIFIELD ###
+                if ":" in nextToken:
+                    #print('Hey6')
+                    split = nextToken.split(':')
+                    nextPosting = self.get_posting(split[1],split[0])
+                ####
+                
+                else:
+                    nextPosting = self.get_posting(nextToken)
 
             # Según el conector de la solicitud
             if connector == 'AND':
                 pList = self.and_posting(pList, nextPosting)
             if connector == 'OR':
                 pList = self.or_posting(pList, nextPosting)
-                
+          
         if pList is None:
             return []
 
@@ -581,15 +615,16 @@ class SAR_Project:
 
         """
         
-        # Permuterm
+        #### PERMUTERM ####
         if '?' in term:
             return self.get_permuterm(term, field)
-        elif '*' in term:
+        if '*' in term:
             return self.get_permuterm(term, field)
+        ####          ####
 
         #### STEMMING ####
         if self.use_stemming:
-            return self.get_stemming(term, field)
+          return self.get_stemming(term, field)
         ####          ####
              
         return self.index[field].get(term, [])
@@ -789,9 +824,6 @@ class SAR_Project:
         """
         r = []
         n = list(self.news.keys())
-        
-        #if p is None:
-        # return n
         
         for new in n:
             if new not in p:
