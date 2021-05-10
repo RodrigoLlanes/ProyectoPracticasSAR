@@ -1043,13 +1043,11 @@ class SAR_Project:
         
         def print_snippets(self, terms, text):
         """
-        Extrae snippets de un texto dado los cuales seran del size indicado.
+        Extrae snippets de un texto dado.
         param:  
             "terms": lista de terminos de los cuales queremos encontrar un snippet.
             "text" : texto del cual se extraeran el snippet
-        Si el termino es de la forma "field:term" se buscará el el campo "field" de la noticia. Si no, se buscará en el artículo.
-        return: el numero de noticias recuperadas, para la opcion -T
-        
+        Si el termino es de la forma "field:term" se buscará el el campo "field" de la noticia. Si no, se buscará en el artículo.   
         """                
        
         tokens = self.tokenize(text)
