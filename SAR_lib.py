@@ -456,9 +456,7 @@ class SAR_Project:
         if len(query) == 1:
             return self.get_posting(query)
         
-        #reg = re.compile(r"\w+")
         tokens = query.split(' ')
-        #tokens = reg.findall(query)
         firstToken = tokens.pop(0)
 
         # Si el primer elemento no es un token, sino un conector 'NOT'
@@ -545,7 +543,7 @@ class SAR_Project:
         return: posting list con el resultado de la query
 
         """
-        tokenized = re.findall(r"(\(|\)|[\w|:]+)", query)
+        tokenized = re.findall(r"(\(|\)|[\w|:|*|?]+)", query)
 
         return self._solve_query_parenthesis(tokenized)
 
@@ -576,7 +574,6 @@ class SAR_Project:
                 negation = True
             elif token == "AND" or token == "OR":
                 conjunction = token
-                #print(ind, token)
             else:
                 value = self.operate(value, self.solve_query(token), conjunction, negation)
                 negation = False
@@ -623,7 +620,7 @@ class SAR_Project:
 
         #### STEMMING ####
         if self.use_stemming:
-          return self.get_stemming(term, field)
+            return self.get_stemming(term, field)
         ####          ####
              
         return self.index[field].get(term, [])
@@ -744,7 +741,6 @@ class SAR_Project:
         
         term = term + '$'
         asterix = False
-        token_list = []
         token_find_list = []
 
         # Si contiene '?' rotamos hasta dejar el comodín al final de la palabra
@@ -768,8 +764,8 @@ class SAR_Project:
             # Extraemos los tokens con la longitud mayor o igual (si no '*') a la consulta y que coincidan con su permuterm
             # según el campo especificado
             # Añadimos los tokens a la lista
-            for field in self.ptindex.keys():    
-                for clave in self.ptindex[field].keys():
+            #for field in self.ptindex.keys():    
+            for clave in self.ptindex[field].keys():
                     if clave[0:len(term)] == term:
                         for tk in self.ptindex[field].get(clave):
                             if (tk not in token_find_list):
@@ -777,7 +773,7 @@ class SAR_Project:
                                     token_find_list.append(tk)
                                 elif (len(tk) == len(term)):
                                     token_find_list.append(tk)
-        
+
         ####################################
 
         else:
@@ -794,12 +790,12 @@ class SAR_Project:
                                 token_find_list.append(tk)
 
         if len(token_find_list) == 1:
-            return self.get_posting_permu(token_find_list[0])
-        
+            return self.get_posting_permu(token_find_list[0],field)
+
         # Calculamos la consulta como union de tokens
-        pList = self.get_posting_permu(token_find_list[0])
+        pList = self.get_posting_permu(token_find_list[0],field)
         for i in range(1, len(token_find_list)):
-            pList = self.or_posting(pList, self.get_posting_permu(token_find_list[i]))
+            pList = self.or_posting(pList, self.get_posting_permu(token_find_list[i],field))
 
         return pList
 
