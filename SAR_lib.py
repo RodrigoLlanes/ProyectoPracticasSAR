@@ -1004,13 +1004,14 @@ class SAR_Project:
         return: el numero de noticias recuperadas, para la opcion -T
         
         """
-        result = self.solve_query(query)
+       result = self.solve_query(query)
         if self.use_ranking:
             result = self.rank_result(result, query)
 
         print('========================================')
-        print('Query: '+str(query)+'\n')
-        print('Number of results: '+str(len(result))+'\n')
+        print('Query: '+str(query))
+        print('Number of results: '+str(len(result)))
+        print('----------------------')
         i=0 
         if self.show_all:
             nIteraciones = range(len(result))
@@ -1021,16 +1022,53 @@ class SAR_Project:
             noticia = result[j]
             fileId   = self.news[noticia]
             with open(self.docs[fileId[0]]) as f:
-                jsonNoticia = json.load(f)            
+                jsonNoticia = json.load(f)   
             jsonNoticia=jsonNoticia[fileId[1]]
-            print('#%s  (0) (%s) (%s) %s: (%s)  \n'%(i,noticia,jsonNoticia['date'],jsonNoticia['title'],jsonNoticia['keywords']))
+            #print('#%s  (0) (%s) (%s) %s: (%s)  \n'%(i,noticia,jsonNoticia['date'],jsonNoticia['title'],jsonNoticia['keywords']))
+            print('#'+str(i))
+            print('Score: 0')
+            print(str(noticia))
+            print('Date: '+str(jsonNoticia['date']))
+            print('Title: '+str(jsonNoticia['title']))
+            print('Keywords: '+ str(jsonNoticia['keywords']))
             if(self.show_snippet):
-                print('Summary: %s \n'%(jsonNoticia['summary']))
+                print('Snippet: \n')
+                self.print_snippets(self.tokenize(query), jsonNoticia['article'])
+            print('----------------------')
         print('========================================')
         return len(result)
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
+        
+        def print_snippets(self, terms, text):
+        """
+        Extrae snippets de un texto dado los cuales seran del size indicado.
+        param:  
+            "terms": lista de terminos de los cuales queremos encontrar un snippet.
+            "text" : texto del cual se extraeran el snippet
+        Si el termino es de la forma "field:term" se buscará el el campo "field" de la noticia. Si no, se buscará en el artículo.
+        return: el numero de noticias recuperadas, para la opcion -T
+        
+        """                
+       
+        tokens = self.tokenize(text)
+        for term in terms:
+            field = "article"
+            if ':' in term:
+                field = term.split(':')[0]
+                term = term.split(':')[1]
+            pos = -1
+            for i,token in enumerate(tokens):
+                if token == term:
+                    pos = i
+                    break
+            snip = "... "
+            if pos >= 0:
+                for j in range(max((pos - int(15/2) + 1), 0), min(pos + int(15/2), len(tokens) - 1)):
+                    snip = snip + tokens[j] + " "
+                snip = snip + "..."
+                print(snip)
 
     def rank_result(self, result, query):
         """
