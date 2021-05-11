@@ -1004,7 +1004,7 @@ class SAR_Project:
         return: el numero de noticias recuperadas, para la opcion -T
         
         """
-       result = self.solve_query(query)
+        result = self.solve_query(query)
         if self.use_ranking:
             result = self.rank_result(result, query)
 
@@ -1041,7 +1041,7 @@ class SAR_Project:
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
         
-        def print_snippets(self, terms, text):
+    def print_snippets(self, terms, text):
         """
         Extrae snippets de un texto dado.
         param:  
