@@ -579,7 +579,7 @@ class SAR_Project:
                 negation = False
             i += 1
 
-        return value.copy()
+        return value
 
 
     def operate(self, a, b, op, not_b):
