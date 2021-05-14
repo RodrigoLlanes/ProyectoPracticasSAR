@@ -67,19 +67,6 @@ guerra OR keywords:EEUU	271
 
 
 #
-# POSICIONALES
-#
-fin AND de AND semana	181
-fin AND de AND semana AND país	77
-"fin de semana"	92
-"fin de semana" AND país	28
-medalla AND de AND oro	19
-"medalla de oro"	9
-deporte AND "medalla de oro"	4
-"medalla de oro" AND NOT deporte	5
-
-
-#
 # PERMUTERM
 #
 casa	1127
@@ -99,29 +86,13 @@ date:201*3	212
 # DE TODO UN POCO
 #
 cosa	416
-"cosa"	161
-"fin de semana"	92
-"el país"	215
-"fin de semana" AND title:"el país"	0
-"fin de semana" AND (title:el OR title:país)	28
-title:"el país"	3
 title:el OR title:país	890
-"fin de semana" AND keywords:restaurantes	1
-"fin de semana" AND (Carmena)	4
 keywords:restaurantes OR Carmena	29
-"fin de semana" AND (restaurantes OR Carmena)	19
-"fin de semana" AND (keywords:restaurantes OR Carmena)	5
 keywords:precio OR keywords:economía	19
-keywords:"precio" OR keywords:economía	16
-keywords:"precio" OR keywords:"economía"	12
 keywords:precio OR keywords:economía AND banco	1
 (keywords:precio OR keywords:economía) AND banco	1
 keywords:precio OR (keywords:economía AND banco)	14
 keywords:precio OR (keywords:economía AND "banco")	14
-keywords:"precio" OR (keywords:economía AND "banco")	11
 keywords:precio OR NOT (keywords:economía AND banco)	2313
 c*sa AND (keywords:restaurantes OR Carmena)	7
 c*sa AND (keywords:restaurantes OR date:201*10)	29
-c*sa AND (keywords:restaurantes AND title:"el país") OR date:201*10	94
-c*sa AND keywords:restaurantes AND (title:"el país" OR date:201*3)	0
-c*sa AND (keywords:restaurantes AND (title:"el país" OR date:201*3))	0
