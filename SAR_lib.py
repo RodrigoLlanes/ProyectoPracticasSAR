@@ -184,7 +184,7 @@ class SAR_Project:
         with open(filename) as fh:
             jlist = json.load(fh)
             
-            ################ MULTIFIELD ####################
+           
             if not self.multifield:
                 for i, article in enumerate([new["article"] for new in jlist]):
                     self.news[new_id] = (doc_id, i)
@@ -194,7 +194,8 @@ class SAR_Project:
                         else:
                             self.index[token].append(new_id)
                     new_id += 1
-            ####################################
+                    
+            ################ MULTIFIELD ####################
             
             else:                
                 i = -1
@@ -217,7 +218,8 @@ class SAR_Project:
 
 
                     new_id += 1
-        
+                    
+            ############################
         
         #
         # "jlist" es una lista con tantos elementos como noticias hay en el fichero,
@@ -682,10 +684,6 @@ class SAR_Project:
                 aux = self.or_posting(r, pl)
                 r = aux
                 
-            # Eliminamos newid repetidos con la siguiente instrucción, al convertir a dict quitamos repetidos y
-            # lo volvemos a convertir a lista
-            #r = set(listapostings)
-                
             # Ordenamos la lista
             r.sort()
         #################################################
@@ -711,10 +709,7 @@ class SAR_Project:
                 pl = self.index.get(token)
                 aux = self.or_posting(r, pl)
                 r = aux
-                
-            # Eliminamos newid repetidos con la siguiente instrucción, al convertir a dict quitamos repetidos y
-            # lo volvemos a convertir a lista
-            #r = set(listapostings)
+
                 
             # Ordenamos la lista
             r.sort()
