@@ -184,7 +184,7 @@ class SAR_Project:
         with open(filename) as fh:
             jlist = json.load(fh)
             
-            ################ MULTIFIELD ####################
+
             if not self.multifield:
                 for i, article in enumerate([new["article"] for new in jlist]):
                     self.news[new_id] = (doc_id, i)
@@ -194,9 +194,10 @@ class SAR_Project:
                         else:
                             self.index[token].append(new_id)
                     new_id += 1
-            ####################################
+
             
-            else:                
+            else:
+                ################ MULTIFIELD ####################
                 i = -1
                 for new in jlist:
                     i += 1
@@ -217,6 +218,7 @@ class SAR_Project:
 
 
                     new_id += 1
+                ####################################
         
         
         #
